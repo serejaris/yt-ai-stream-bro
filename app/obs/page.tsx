@@ -194,12 +194,11 @@ export default function OBSPage() {
     };
 
     setFeedMessages((prev) => {
-      const newMessages = [...prev, newMessage];
-      // Keep only last MAX_FEED_MESSAGES, mark overflow as exiting for animation
+      // Add new message at the beginning so it appears at the bottom (with column-reverse)
+      const newMessages = [newMessage, ...prev];
+      // Keep only first MAX_FEED_MESSAGES (newest), remove from end (oldest)
       if (newMessages.length > MAX_FEED_MESSAGES) {
-        const toRemove = newMessages.length - MAX_FEED_MESSAGES;
-        // Mark first N as exiting, keep rest
-        return newMessages.slice(toRemove);
+        return newMessages.slice(0, MAX_FEED_MESSAGES);
       }
       return newMessages;
     });
