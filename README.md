@@ -1,99 +1,44 @@
-# YouTube Live Chat Fetcher
+# yt-ai-stream-bro
 
-## Установка
+Локальный TypeScript/Node prototype для live-помощников вокруг стримов и выступлений. В repo есть два исторических слоя: YouTube Live Chat Fetcher/OBS overlay и backlog Granola Live Copilot для live-презентаций по transcript stream.
 
-1. Установите зависимости:
-   ```
-   npm install
-   ```
-2. Создайте файл `.env` по образцу `.env.example` и заполните:
-   - `YOUTUBE_API_KEY` - ключ YouTube Data API v3
-   - `YOUTUBE_CHANNEL_ID` - ID вашего канала
-   - `PORT` - порт для сервера (по умолчанию 3000)
-   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` - параметры подключения к PostgreSQL (опционально)
+## Что здесь есть
 
-## Запуск
+| Слой | Назначение |
+|---|---|
+| YouTube chat fetcher | находит активный YouTube live, читает live chat, показывает web/OBS overlay и может сохранять сообщения в PostgreSQL |
+| Granola Live Copilot | backlog для презентационного copilot: transcript delta, outline matcher, progress/timeline/prompts UI |
+| API routes | live chat id, messages, SSE stream, DB history |
 
-### Веб-интерфейс
+## Запуск YouTube chat layer
 
-Для отображения чата в браузере:
-
-```
+```bash
+npm install
+cp .env.example .env
 npm run dev
 ```
 
-Сервер запускается на `http://localhost:3000`, автоматически ищет активную трансляцию канала и отображает сообщения чата в реальном времени.
+Локально: `http://localhost:3000`.
+OBS Browser Source: `http://localhost:3000/obs`.
 
-### Интерфейс для OBS
+## Основные env
 
-Для использования чата в OBS Studio через Browser Source:
-
-1. Откройте OBS Studio
-2. Добавьте источник "Browser Source"
-3. Укажите URL: `http://localhost:3000/obs`
-4. Настройте размеры по необходимости
-
-Интерфейс оптимизирован для отображения в OBS с прозрачным фоном и анимацией появления сообщений.
-
-### Получение сообщений из Live Chat
-
-Для получения сообщений из указанного Live Chat в консоль:
-
-```
-npm start
+```bash
+YOUTUBE_API_KEY=...
+YOUTUBE_CHANNEL_ID=...
+PORT=3000
+DB_HOST=...
+DB_PORT=...
+DB_NAME=...
+DB_USER=...
+DB_PASSWORD=...
 ```
 
-### Извлечение Live Chat ID из трансляции
+PostgreSQL опционален: без него можно использовать live overlay, но история сообщений не будет сохраняться.
 
-Для автоматического поиска активной трансляции канала и извлечения Live Chat ID:
+## Для агента
 
-```
-npm run test:serejaris
-```
-
-Скрипт выполняет следующие действия:
-1. Находит канал по handle (по умолчанию `@serejaris`, можно изменить через переменную окружения `YOUTUBE_CHANNEL_HANDLE`)
-2. Ищет активную трансляцию канала
-3. Извлекает Live Chat ID из трансляции
-4. Получает и отображает сообщения из чата трансляции
-
-## Другие команды
-
-- `npm run test:connection` - тестирование подключения к YouTube API
-- `npm run get-channel` - получение данных канала
-
-## API Endpoints
-
-### `/api/live-chat-id`
-Получение Live Chat ID активной трансляции канала.
-
-### `/api/messages`
-Получение сообщений из чата трансляции.
-- `liveChatId` (обязательный) - ID чата трансляции
-- `pageToken` (опциональный) - токен для пагинации
-- `videoId` (опциональный) - ID видео для сохранения в БД
-
-### `/api/messages/stream`
-Server-Sent Events (SSE) поток для получения сообщений в реальном времени.
-- `liveChatId` (обязательный) - ID чата трансляции
-- `videoId` (опциональный) - ID видео для сохранения в БД
-
-### `/api/messages/db`
-Получение сообщений из базы данных PostgreSQL.
-- `limit` (опциональный, по умолчанию 100) - количество сообщений
-- `offset` (опциональный, по умолчанию 0) - смещение для пагинации
-- `videoId` (опциональный) - фильтрация по ID видео
-
-## База данных
-
-Приложение автоматически создает таблицу `chat_messages` в PostgreSQL при первом запуске. Все сообщения из чата сохраняются в базу данных для последующей интеграции с другими системами (например, чатом вайб-кодеров).
-
-Схема таблицы:
-- `id` - уникальный идентификатор записи
-- `message_id` - уникальный ID сообщения из YouTube
-- `video_id` - ID видео трансляции
-- `live_chat_id` - ID чата трансляции
-- `author_name` - имя автора сообщения
-- `message_text` - текст сообщения
-- `published_at` - время публикации сообщения
-- `created_at` - время создания записи в БД
+- Не путать этот repo с `news-scraper`: задачи новостного crawler/digest перенесены туда.
+- Для YouTube chat work смотри код web/API/OBS overlay и issue `epic: YouTube Stream Companion`.
+- Для Granola work смотри issue `epic: Granola Live Copilot` и его sub-issues.
+- Перед выводом о live-интеграции проверяй реальный источник transcript/chat, а не только static UI.
